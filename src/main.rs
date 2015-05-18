@@ -120,7 +120,7 @@ impl Rule {
             vmap: self.vmap.clone(),
         }
     }
-    fn from_vec(rule: Vec<u8>) -> Result<Rule, RuleErr> {
+    fn from_bytes(rule: &[u8]) -> Result<Rule, RuleErr> {
         let mut lhs: &[u8] = &[];
         let mut rhs: &[u8] = &[];
         let mut no_center_opt = true;
@@ -314,16 +314,16 @@ fn main() {
     window.clear(&Color::black());
     window.display();
 
-    let f = Rule::from_vec(
-        "AannBbnnCcnnDdnn>aBb,bCc,cDd,dAa,abcd"
-        .bytes().collect()).unwrap();
-    let s = Rule::from_vec(
-        "AavBbvCcv>cAa,aBb,bCc"
-        .bytes().collect()).unwrap();
+    let f = Rule::from_bytes(
+        b"AannBbnnCcnnDdnn>aBb,bCc,cDd,dAa,abcd"
+        ).unwrap();
+    let s = Rule::from_bytes(
+        b"AavBbvCcv>cAa,aBb,bCc"
+        ).unwrap();
 
     let mut g = Grammar::new(&[f, s]).unwrap();
 
-    let fist_shape: Vec<Shape> = vec![
+    let first_shape: Vec<Shape> = vec![
         vec![
             Vertex::new_with_pos(&Vector2f{ x: 0f32   +OFF, y: 0f32   +OFF}),
             Vertex::new_with_pos(&Vector2f{ x: 0f32   +OFF, y: 1000f32+OFF}),
@@ -331,7 +331,7 @@ fn main() {
             Vertex::new_with_pos(&Vector2f{ x: 1000f32+OFF, y: 0f32   +OFF})
         ]
     ];
-    let shapes = g.iterate(&fist_shape, 10);
+    let shapes = g.iterate(&first_shape, 10);
     draw_shapes(&mut window, &shapes);
     while window.is_open() {
         for event in window.events() {
