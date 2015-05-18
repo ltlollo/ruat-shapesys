@@ -191,6 +191,9 @@ impl Rule {
             vmap: VecMap::new(),
         })
     }
+    fn from_vec(v: &Vec<u8>) -> Result<Rule, RuleErr> {
+        Rule::from_bytes(&v[..])
+    }
     fn calc_mids(&mut self) {
         if self.no_adjacent_mids_opt {
             for i in (0..self.lhs.len()) {
