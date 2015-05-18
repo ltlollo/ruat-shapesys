@@ -275,18 +275,13 @@ impl Grammar {
         }
     }
     fn next(&mut self, state: &Vec<Shape>) -> Vec<Shape> {
-        let mut res = Vec::new();
-        for shape in state.iter() {
+        state.iter().fold(Vec::new(), |mut res, shape| {
             res.push_all(&self.apply_rule(shape)[..]);
-        }
-        res
+            res
+        })
     }
     fn iterate(&mut self, state: &Vec<Shape>, depth: u8) -> Vec<Shape> {
-        let mut res = state.clone();
-        for _ in (0..depth) {
-            res = self.next(&res);
-        }
-        res
+        (0..depth).fold(state.clone(), |state, _| self.next(&state))
     }
 }
 
