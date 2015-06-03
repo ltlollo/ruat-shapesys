@@ -96,7 +96,6 @@ impl Rule {
         if i < 2 {
             return Err(RuleErr::NoSeparator);
         } else if i > 2 {
-            println!("i {}", i);
             return Err(RuleErr::MultiSeparatos);
         }
         if lhs.len() > 1 {
