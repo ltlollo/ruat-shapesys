@@ -1,4 +1,4 @@
 # rust-shapesys
-porintg to rust of shape-sys.cpp
+rust port of shape-sys.cpp
 
-possibly generate/load a geometry shader
+TODO: possibly generate/load a geometry shader
