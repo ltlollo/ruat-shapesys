@@ -114,10 +114,10 @@ impl Rule {
         let rhsv: Vec<Vec<u8>> = rhs.split(|c| is_rhs_sepa(*c))
                                     .filter(|seq| seq.len() > 0)
                                     .map(|seq| {
-                                        seq.iter().map(|c| *c).collect()
+                                        seq.iter().cloned().collect()
                                     })
                                     .collect();
-        let mut nlhs: Vec<u8> = lhs.iter().map(|a| *a).collect();
+        let mut nlhs: Vec<u8> = lhs.iter().cloned().collect();
         if !lhs.is_empty() {
             if !is_vertex(lhs[0]) {
                 return Err(RuleErr::NonVertexStart);
