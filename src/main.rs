@@ -1,4 +1,4 @@
-#![feature(collections)]
+#![feature(vecmap)]
 
 extern crate sfml;
 

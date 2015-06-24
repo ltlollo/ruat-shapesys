@@ -218,7 +218,7 @@ impl Grammar {
     }
     pub fn next(&mut self, state: &Vec<Shape>) -> Vec<Shape> {
         state.iter().fold(Vec::new(), |mut res, shape| {
-            res.push_all(&self.apply_rule(shape)[..]);
+            res.extend(self.apply_rule(shape));
             res
         })
     }
