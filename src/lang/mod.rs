@@ -1,4 +1,6 @@
-use std::collections::VecMap;
+extern crate vec_map;
+
+use self::vec_map::VecMap;
 use sfml::graphics::Vertex;
 
 pub mod geom;

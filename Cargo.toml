@@ -4,4 +4,5 @@ version = "0.0.1"
 authors = ["ltlollo <ltlollo.it@gmail.com>"]
 
 [dependencies]
-sfml = "0.9.3"
+sfml = "*"
+vec_map = "*"
