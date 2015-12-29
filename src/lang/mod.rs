@@ -11,7 +11,7 @@ pub fn is_vertex(c: u8) -> bool {
     const Z: u8 = 'Z' as u8;
     match c {
         A...Z => true,
-        _     => false,
+        _ => false,
     }
 }
 
@@ -20,26 +20,33 @@ pub fn is_mid(c: u8) -> bool {
     const Z: u8 = 'z' as u8;
     match c {
         A...Z => true,
-        _     => false,
+        _ => false,
     }
 }
 
-pub fn is_center(c: u8) -> bool { c == '.' as u8 }
-pub fn is_rhs_sepa(c: u8) -> bool { c == ',' as u8 }
-pub fn is_rule_sepa(c: u8) -> bool { c == '>' as u8 }
+pub fn is_center(c: u8) -> bool {
+    c == '.' as u8
+}
+pub fn is_rhs_sepa(c: u8) -> bool {
+    c == ',' as u8
+}
+pub fn is_rule_sepa(c: u8) -> bool {
+    c == '>' as u8
+}
 
 pub fn is_legal(c: u8) -> bool {
-    is_vertex(c) || is_mid(c) || is_center(c) || is_rhs_sepa(c) ||
-        is_rule_sepa(c)
+    is_vertex(c) || is_mid(c) || is_center(c) || is_rhs_sepa(c) || is_rule_sepa(c)
 }
 
 pub fn del_garbage(symbols: &mut Vec<u8>) {
-   symbols.retain(|c| is_legal(*c));
+    symbols.retain(|c| is_legal(*c));
 }
 
 #[derive(Debug)]
 pub enum RuleErr {
-    UnknownSymbol{ s: u8},
+    UnknownSymbol {
+        s: u8,
+    },
     PointSegmentation,
     EmptyCenter,
     NonVertexStart,
@@ -58,7 +65,7 @@ pub struct Rule {
 
 impl Rule {
     pub fn clone(&self) -> Rule {
-        Rule{
+        Rule {
             no_adjacent_mids_opt: self.no_adjacent_mids_opt,
             no_center_opt: self.no_center_opt,
             n_gons: self.n_gons,
@@ -81,19 +88,17 @@ impl Rule {
                 n_gons = ele.iter().filter(|c| is_vertex(**c)).count();
             } else if i == 1 {
                 for &sym in ele.iter() {
-                   if !lhs.iter()
-                          .any(|&c| {
-                              c == sym || is_rhs_sepa(sym) || is_center(sym)
-                          }) {
-                              return Err(RuleErr::UnknownSymbol{ s: sym });
-                   }
-                   if is_center(sym) {
+                    if !lhs.iter()
+                           .any(|&c| c == sym || is_rhs_sepa(sym) || is_center(sym)) {
+                        return Err(RuleErr::UnknownSymbol { s: sym });
+                    }
+                    if is_center(sym) {
                         no_center_opt = false;
-                   }
+                    }
                 }
                 rhs = ele;
             }
-            i  = i+1;
+            i = i + 1;
         }
         if i < 2 {
             return Err(RuleErr::NoSeparator);
@@ -101,8 +106,8 @@ impl Rule {
             return Err(RuleErr::MultiSeparatos);
         }
         if lhs.len() > 1 {
-            for j in (0..lhs.len()-1) {
-                if is_mid(lhs[j]) && is_mid(lhs[j+1]) {
+            for j in 0..lhs.len() - 1 {
+                if is_mid(lhs[j]) && is_mid(lhs[j + 1]) {
                     no_adjacent_mids_opt = false;
                 }
             }
@@ -115,9 +120,7 @@ impl Rule {
         }
         let rhsv: Vec<Vec<u8>> = rhs.split(|c| is_rhs_sepa(*c))
                                     .filter(|seq| seq.len() > 0)
-                                    .map(|seq| {
-                                        seq.iter().cloned().collect()
-                                    })
+                                    .map(|seq| seq.iter().cloned().collect())
                                     .collect();
         let mut nlhs: Vec<u8> = lhs.iter().cloned().collect();
         if !lhs.is_empty() {
@@ -128,7 +131,7 @@ impl Rule {
                 nlhs.push(lhs[0]);
             }
         }
-        Ok(Rule{
+        Ok(Rule {
             no_adjacent_mids_opt: no_adjacent_mids_opt,
             no_center_opt: no_center_opt,
             n_gons: n_gons,
@@ -142,25 +145,26 @@ impl Rule {
     }
     pub fn calc_mids(&mut self) {
         if self.no_adjacent_mids_opt {
-            for i in (0..self.lhs.len()) {
+            for i in 0..self.lhs.len() {
                 if is_mid(self.lhs[i]) {
-                    let val = mid(&self.vmap[self.lhs[i-1] as usize],
-                                  &self.vmap[self.lhs[i+1] as usize]);
+                    let val = mid(&self.vmap[self.lhs[i - 1] as usize],
+                                  &self.vmap[self.lhs[i + 1] as usize]);
                     self.vmap.insert(self.lhs[i] as usize, val);
                 }
             }
         } else {
-            for mut i in (0..self.lhs.len()) {
+            for mut i in 0..self.lhs.len() {
                 let i_mb = i;
                 while is_mid(self.lhs[i]) {
-                    i = i+1;
+                    i = i + 1;
                 }
                 let n_mids = i - i_mb;
-                for j in (0..n_mids) {
-                    let val = div_seg(&self.vmap[self.lhs[i_mb-1] as usize],
+                for j in 0..n_mids {
+                    let val = div_seg(&self.vmap[self.lhs[i_mb - 1] as usize],
                                       &self.vmap[self.lhs[i] as usize],
-                                      (j+1) as f32, (n_mids+1) as f32);
-                    self.vmap.insert(self.lhs[i_mb+j] as usize, val);
+                                      (j + 1) as f32,
+                                      (n_mids + 1) as f32);
+                    self.vmap.insert(self.lhs[i_mb + j] as usize, val);
                 }
             }
         }
@@ -170,10 +174,10 @@ impl Rule {
         let mut i = 0;
         for ele in shape.iter() {
             while !is_vertex(self.lhs[i]) {
-                i = i+1;
+                i = i + 1;
             }
             self.vmap.insert(self.lhs[i] as usize, *ele);
-            i = i+1;
+            i = i + 1;
         }
         self.calc_mids();
         if !self.no_center_opt {
@@ -198,8 +202,8 @@ pub struct Grammar {
 impl Grammar {
     pub fn new(rules: &[Rule]) -> Result<Grammar, GrammarErr> {
         if rules.len() > 1 {
-            for i in (0..rules.len()-1) {
-                for j in (i+1..rules.len()) {
+            for i in 0..rules.len() - 1 {
+                for j in i + 1..rules.len() {
                     if rules[i].n_gons == rules[j].n_gons {
                         return Err(GrammarErr::NonUniqueRule);
                     }
@@ -210,12 +214,12 @@ impl Grammar {
         for rule in rules.iter() {
             pmap.insert(rule.n_gons, rule.clone());
         }
-        Ok(Grammar{ pmap: pmap })
+        Ok(Grammar { pmap: pmap })
     }
     pub fn apply_rule(&mut self, shape: &Shape) -> Vec<Shape> {
         match self.pmap.get_mut(&shape.len()) {
             Some(r) => r.apply(&shape),
-            None    => vec![shape.clone()],
+            None => vec![shape.clone()],
         }
     }
     pub fn next(&mut self, state: &Vec<Shape>) -> Vec<Shape> {
@@ -229,20 +233,20 @@ impl Grammar {
     }
 }
 
-/* grammar explanation
- * def: RULE := LHS '>' RHS
- *      LHS  := [A-Z][:alpha:]
- *      RHS  := "" | [:alpha:] | "." | RHS ',' RHS
- * ex: AbCdEf>ACE,bdf
- *      - AbCdEf>_ instructs the parser to match an ACE shaped plygon,
- *        introducing b,d,f points between it's vertices
- *      - _>aBc instucts the parser to form a new aBc polygon with using the
- *        vertices introduced in LHS
- *      - Old vertices must be uppercase, new ones lowercase.
- *      - The LHS definition wraps arownd, therfore in "ABCd", d is considered
- *        between A and C (*)
- *      - '.' introduces the center of the polygon
- * def: RULES := RULE | RULE, RULES
- *      - rules LHS must match unique polygons
- *        ( ex: "ABC>", "AdBC>" is not allowed )
- */
+// grammar explanation
+// def: RULE := LHS '>' RHS
+//      LHS  := [A-Z][:alpha:]
+//      RHS  := "" | [:alpha:] | "." | RHS ',' RHS
+// ex: AbCdEf>ACE,bdf
+//      - AbCdEf>_ instructs the parser to match an ACE shaped plygon,
+//        introducing b,d,f points between it's vertices
+//      - _>aBc instucts the parser to form a new aBc polygon with using the
+//        vertices introduced in LHS
+//      - Old vertices must be uppercase, new ones lowercase.
+//      - The LHS definition wraps arownd, therfore in "ABCd", d is considered
+//        between A and C (*)
+//      - '.' introduces the center of the polygon
+// def: RULES := RULE | RULE, RULES
+//      - rules LHS must match unique polygons
+//        ( ex: "ABC>", "AdBC>" is not allowed )
+//
