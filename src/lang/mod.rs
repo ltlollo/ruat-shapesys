@@ -6,6 +6,8 @@ use sfml::graphics::Vertex;
 pub mod geom;
 use self::geom::*;
 
+use std::string::String;
+
 pub fn is_vertex(c: u8) -> bool {
     const A: u8 = 'A' as u8;
     const Z: u8 = 'Z' as u8;
@@ -36,10 +38,6 @@ pub fn is_rule_sepa(c: u8) -> bool {
 
 pub fn is_legal(c: u8) -> bool {
     is_vertex(c) || is_mid(c) || is_center(c) || is_rhs_sepa(c) || is_rule_sepa(c)
-}
-
-pub fn del_garbage(symbols: &mut Vec<u8>) {
-    symbols.retain(|c| is_legal(*c));
 }
 
 #[derive(Debug)]
@@ -75,6 +73,11 @@ impl Rule {
         }
     }
     pub fn from_bytes(rule: &[u8]) -> Result<Rule, RuleErr> {
+        for &sym in rule.iter() {
+            if !is_legal(sym) {
+                return Err(RuleErr::UnknownSymbol { s: sym });
+            }
+        }
         let mut lhs: &[u8] = &[];
         let mut rhs: &[u8] = &[];
         let mut no_center_opt = true;
@@ -188,6 +191,12 @@ impl Rule {
         }
         res
     }
+    pub fn as_string(&self) -> String {
+        let mut res = self.lhs.clone();
+        res.push('>' as u8);
+        res.extend(self.vrhs.iter().flat_map(|s| s.iter()));
+        String::from_utf8(res).unwrap()
+    }
 }
 
 #[derive(Debug)]
@@ -230,6 +239,10 @@ impl Grammar {
     }
     pub fn iterate(&mut self, state: &Vec<Shape>, depth: u8) -> Vec<Shape> {
         (0..depth).fold(state.clone(), |state, _| self.next(&state))
+    }
+    pub fn as_string(&self) -> String {
+        let res: Vec<String> = self.pmap.iter().map(|(_, s)| s.as_string()).collect();
+        res.join(";")
     }
 }
 

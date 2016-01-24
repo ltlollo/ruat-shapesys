@@ -1,7 +1,7 @@
 extern crate sfml;
 
-const WIDTH: u32 = 1020;
-const HEIGHT: u32 = 1020;
+const WIDTH: u32 = 1024;
+const HEIGHT: u32 = 1024;
 const OFF: f32 = 10.0;
 
 use sfml::system::Vector2f;
@@ -51,7 +51,16 @@ fn main() {
             match event {
                 event::KeyPressed{code, ..} => {
                     match code {
-                        Key::Escape => window.close(),
+
+                        Key::Escape => {
+                            window.close();
+                        }
+                        Key::S => {
+                            if let Some(img) = window.capture() {
+                                let fname = g.as_string() + ".png";
+                                img.save_to_file(&fname);
+                            }
+                        }
                         _ => (),
                     }
                 }
