@@ -51,7 +51,6 @@ fn main() {
             match event {
                 event::KeyPressed{code, ..} => {
                     match code {
-
                         Key::Escape => {
                             window.close();
                         }
