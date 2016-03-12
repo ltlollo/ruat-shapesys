@@ -2,7 +2,7 @@ extern crate sfml;
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 1024;
-const OFF: f32 = 10.0;
+const OFF: f32 = 0.0;
 
 use sfml::system::Vector2f;
 use sfml::window::{ContextSettings, VideoMode, event, window_style};
@@ -23,8 +23,8 @@ fn main() {
     window.clear(&Color::black());
     window.display();
 
-    let f = Rule::from_bytes(b"AannBbnnCcnnDdnn>aBb,bCc,cDd,dAa,abcd").unwrap();
-    let s = Rule::from_bytes(b"AavBbvCcv>cAa,aBb,bCc").unwrap();
+    let f = Rule::from_bytes(b"ABCD>AB.,BC.,CD.,DA.").unwrap();
+    let s = Rule::from_bytes(b"AaBnnnnncnCndnnnnn>acd,Aad,aBc,dcC").unwrap();
 
     let mut g = Grammar::new(&[f, s]).unwrap();
 
@@ -34,17 +34,17 @@ fn main() {
                                             },
                                             Vector2f {
                                                 x: 0f32 + OFF,
-                                                y: 1000f32 + OFF,
+                                                y: HEIGHT as f32 - OFF,
                                             },
                                             Vector2f {
-                                                x: 1000f32 + OFF,
-                                                y: 1000f32 + OFF,
+                                                x: WIDTH as f32 - OFF,
+                                                y: HEIGHT as f32 - OFF,
                                             },
                                             Vector2f {
-                                                x: 1000f32 + OFF,
+                                                x: WIDTH as f32 - OFF,
                                                 y: 0f32 + OFF,
                                             }]];
-    let shapes = g.iterate(&first_shape, 10);
+    let shapes = g.iterate(&first_shape, 7);
     let mut rs = RenderStates::default();
     draw_shapes(&mut window, &shapes, &mut rs);
     while window.is_open() {

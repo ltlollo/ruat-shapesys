@@ -39,7 +39,8 @@ pub fn is_rule_sepa(c: u8) -> bool {
 }
 
 pub fn is_legal(c: u8) -> bool {
-    is_vertex(c) || is_mid(c) || is_center(c) || is_rhs_sepa(c) || is_rule_sepa(c)
+    is_vertex(c) || is_mid(c) || is_center(c) || is_rhs_sepa(c) ||
+    is_rule_sepa(c)
 }
 
 #[derive(Debug)]
@@ -94,7 +95,9 @@ impl Rule {
             } else if i == 1 {
                 for &sym in ele.iter() {
                     if !lhs.iter()
-                           .any(|&c| c == sym || is_rhs_sepa(sym) || is_center(sym)) {
+                           .any(|&c| {
+                               c == sym || is_rhs_sepa(sym) || is_center(sym)
+                           }) {
                         return Err(RuleErr::UnknownSymbol { s: sym });
                     }
                     if is_center(sym) {
@@ -197,8 +200,10 @@ impl Rule {
     }
     pub fn as_string(&self) -> String {
         let mut res = self.lhs.clone();
+        let sepa = ',' as u8;
+        let mut rhs = self.vrhs[..].join(&sepa);
         res.push('>' as u8);
-        res.extend(self.vrhs.iter().flat_map(|s| s.iter()));
+        res.append(&mut rhs);
         String::from_utf8(res).unwrap()
     }
 }
@@ -245,7 +250,10 @@ impl Grammar {
         (0..depth).fold(state.clone(), |state, _| self.next(&state))
     }
     pub fn as_string(&self) -> String {
-        let res: Vec<String> = self.pmap.iter().map(|(_, s)| s.as_string()).collect();
+        let res: Vec<String> = self.pmap
+                                   .iter()
+                                   .map(|(_, s)| s.as_string())
+                                   .collect();
         res.join(";")
     }
 }
