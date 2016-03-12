@@ -9,31 +9,27 @@ pub mod geom;
 use self::geom::*;
 
 pub fn is_vertex(c: u8) -> bool {
-    const A: u8 = 'A' as u8;
-    const Z: u8 = 'Z' as u8;
     match c {
-        A...Z => true,
+        b'A'...b'Z' => true,
         _ => false,
     }
 }
 
 pub fn is_mid(c: u8) -> bool {
-    const A: u8 = 'a' as u8;
-    const Z: u8 = 'z' as u8;
     match c {
-        A...Z => true,
+        b'a'...b'z' => true,
         _ => false,
     }
 }
 
 pub fn is_center(c: u8) -> bool {
-    c == '.' as u8
+    c == b'.'
 }
 pub fn is_rhs_sepa(c: u8) -> bool {
-    c == ',' as u8
+    c == b','
 }
 pub fn is_rule_sepa(c: u8) -> bool {
-    c == '>' as u8
+    c == b'>'
 }
 
 pub fn is_legal(c: u8) -> bool {
@@ -167,7 +163,7 @@ impl Rule {
                 }
                 let n_mids = i - i_mb;
                 for j in 0..n_mids {
-                    let val = div_seg(&self.vmap[self.lhs[i_mb - 1] as usize],
+                    let val = div_vec(&self.vmap[self.lhs[i_mb - 1] as usize],
                                       &self.vmap[self.lhs[i] as usize],
                                       (j + 1) as f32,
                                       (n_mids + 1) as f32);
@@ -199,9 +195,8 @@ impl Rule {
     pub fn as_string(&self) -> String {
         use std::string::String;
         let mut res = self.lhs.clone();
-        let sepa = ',' as u8;
-        let mut rhs = self.vrhs[..].join(&sepa);
-        res.push('>' as u8);
+        let mut rhs = self.vrhs.join(&b',');
+        res.push(b'>');
         res.append(&mut rhs);
         String::from_utf8(res).unwrap()
     }

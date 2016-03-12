@@ -55,7 +55,7 @@ fn main() {
                         Key::Escape => {
                             window.close();
                         }
-                         Key::Q => {
+                        Key::Q => {
                             window.close();
                         }
                         Key::S => {

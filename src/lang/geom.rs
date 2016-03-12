@@ -11,7 +11,7 @@ pub fn mid(f: &Vector2f, s: &Vector2f) -> Vector2f {
     }
 }
 
-pub fn div_seg(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
+pub fn div_vec(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
     let min_x = f.x.min(s.x);
     let max_x = f.x.max(s.x);
     let min_y = f.y.min(s.y);
@@ -56,7 +56,7 @@ pub fn draw_shapes(window: &mut RenderWindow,
 }
 
 pub fn calc_center(shape: &Shape) -> Vector2f {
-    let mut c = Vector2f::new(0f32, 0f32);
+    let mut c = Vector2f { x: 0f32, y: 0f32 };
     for v in shape.iter() {
         c.x = c.x + v.x;
         c.y = c.y + v.y;
