@@ -158,7 +158,8 @@ impl Rule {
                 }
             }
         } else {
-            for mut i in 0..self.lhs.len() {
+            let mut i = 0;
+            while i < self.lhs.len() {
                 let i_mb = i;
                 while is_mid(self.lhs[i]) {
                     i = i + 1;
@@ -171,6 +172,7 @@ impl Rule {
                                       (n_mids + 1) as f32);
                     self.vmap.insert(self.lhs[i_mb + j] as usize, val);
                 }
+                i = i + 1;
             }
         }
     }
