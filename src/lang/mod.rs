@@ -8,8 +8,6 @@ use sfml::system::Vector2f;
 pub mod geom;
 use self::geom::*;
 
-use std::string::String;
-
 pub fn is_vertex(c: u8) -> bool {
     const A: u8 = 'A' as u8;
     const Z: u8 = 'Z' as u8;
@@ -199,6 +197,7 @@ impl Rule {
         res
     }
     pub fn as_string(&self) -> String {
+        use std::string::String;
         let mut res = self.lhs.clone();
         let sepa = ',' as u8;
         let mut rhs = self.vrhs[..].join(&sepa);

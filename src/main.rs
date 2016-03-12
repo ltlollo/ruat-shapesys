@@ -55,6 +55,9 @@ fn main() {
                         Key::Escape => {
                             window.close();
                         }
+                         Key::Q => {
+                            window.close();
+                        }
                         Key::S => {
                             if let Some(img) = window.capture() {
                                 let fname = g.as_string() + ".png";
