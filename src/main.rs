@@ -5,9 +5,9 @@ const HEIGHT: u32 = 1024;
 const OFF: f32 = 10.0;
 
 use sfml::system::Vector2f;
-use sfml::window::{ContextSettings, VideoMode, event, Close};
-use sfml::window::keyboard::Key;
-use sfml::graphics::{RenderWindow, RenderTarget, Color, Vertex};
+use sfml::window::{ContextSettings, VideoMode, event, window_style};
+use sfml::window::Key;
+use sfml::graphics::{RenderWindow, RenderTarget, RenderStates, Color};
 
 mod lang;
 use lang::*;
@@ -16,7 +16,7 @@ use lang::geom::*;
 fn main() {
     let mut window = RenderWindow::new(VideoMode::new_init(WIDTH, HEIGHT, 32),
                                        "shapesys",
-                                       Close,
+                                       window_style::CLOSE,
                                        &ContextSettings::default())
                          .expect("Cannot create a Render Window.");
 
@@ -28,24 +28,25 @@ fn main() {
 
     let mut g = Grammar::new(&[f, s]).unwrap();
 
-    let first_shape: Vec<Shape> = vec![vec![Vertex::new_with_pos(&Vector2f {
+    let first_shape: Vec<Shape> = vec![vec![Vector2f {
                                                 x: 0f32 + OFF,
                                                 y: 0f32 + OFF,
-                                            }),
-                                            Vertex::new_with_pos(&Vector2f {
+                                            },
+                                            Vector2f {
                                                 x: 0f32 + OFF,
                                                 y: 1000f32 + OFF,
-                                            }),
-                                            Vertex::new_with_pos(&Vector2f {
+                                            },
+                                            Vector2f {
                                                 x: 1000f32 + OFF,
                                                 y: 1000f32 + OFF,
-                                            }),
-                                            Vertex::new_with_pos(&Vector2f {
+                                            },
+                                            Vector2f {
                                                 x: 1000f32 + OFF,
                                                 y: 0f32 + OFF,
-                                            })]];
+                                            }]];
     let shapes = g.iterate(&first_shape, 10);
-    draw_shapes(&mut window, &shapes);
+    let mut rs = RenderStates::default();
+    draw_shapes(&mut window, &shapes, &mut rs);
     while window.is_open() {
         for event in window.events() {
             match event {

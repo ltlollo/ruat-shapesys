@@ -1,7 +1,9 @@
+#![allow(dead_code)]
+
 extern crate vec_map;
 
 use self::vec_map::VecMap;
-use sfml::graphics::Vertex;
+use sfml::system::Vector2f;
 
 pub mod geom;
 use self::geom::*;
@@ -58,7 +60,7 @@ pub struct Rule {
     n_gons: usize,
     lhs: Vec<u8>,
     vrhs: Vec<Vec<u8>>,
-    vmap: VecMap<Vertex>,
+    vmap: VecMap<Vector2f>,
 }
 
 impl Rule {
@@ -226,7 +228,7 @@ impl Grammar {
         Ok(Grammar { pmap: pmap })
     }
     pub fn apply_rule(&mut self, shape: &Shape) -> Vec<Shape> {
-        match self.pmap.get_mut(&shape.len()) {
+        match self.pmap.get_mut(shape.len()) {
             Some(r) => r.apply(&shape),
             None => vec![shape.clone()],
         }

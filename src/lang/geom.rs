@@ -1,57 +1,60 @@
 extern crate sfml;
 
 use sfml::system::Vector2f;
-use sfml::graphics::{RenderWindow, RenderTarget, Vertex, PrimitiveType};
-pub type Shape = Vec<Vertex>;
+use sfml::graphics::{RenderWindow, RenderTarget, RenderStates, Vertex, PrimitiveType};
+pub type Shape = Vec<Vector2f>;
 
-pub fn mid(f: &Vertex, s: &Vertex) -> Vertex {
-    Vertex::new_with_pos(&Vector2f {
-        x: (f.position.x + s.position.x) / 2f32,
-        y: (f.position.y + s.position.y) / 2f32,
-    })
+pub fn mid(f: &Vector2f, s: &Vector2f) -> Vector2f {
+    Vector2f {
+        x: (f.x + s.x) / 2f32,
+        y: (f.y + s.y) / 2f32,
+    }
 }
 
-pub fn div_seg(f: &Vertex, s: &Vertex, of: f32, n: f32) -> Vertex {
-    let min_x = f.position.x.min(s.position.x);
-    let max_x = f.position.x.max(s.position.x);
-    let min_y = f.position.y.min(s.position.y);
-    let max_y = f.position.y.max(s.position.y);
-    let x = if f.position.x == min_x {
+pub fn div_seg(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
+    let min_x = f.x.min(s.x);
+    let max_x = f.x.max(s.x);
+    let min_y = f.y.min(s.y);
+    let max_y = f.y.max(s.y);
+    let x = if f.x == min_x {
         (max_x - min_x) * of / n + min_x
     } else {
         (max_x - min_x) * (n - of) / n + min_x
     };
-    let y = if f.position.y == min_y {
+    let y = if f.y == min_y {
         (max_y - min_y) * of / n + min_y
     } else {
         (max_y - min_y) * (n - of) / n + min_y
     };
-    Vertex::new_with_pos(&Vector2f { x: x, y: y })
+    Vector2f { x: x, y: y }
 }
 
-pub fn draw_shapes(window: &mut RenderWindow, shapes: &Vec<Shape>) {
+pub fn draw_shapes(window: &mut RenderWindow, shapes: &Vec<Shape>, rs: &mut RenderStates) {
     for shape in shapes.iter() {
+        let mut seg: [Vertex; 2];
         if shape.len() == 1 {
-            window.draw_primitives(&shape[0..1], PrimitiveType::Points);
+            seg = [Vertex::new_with_pos(&shape[0]), Vertex::new_with_pos(&shape[0])];
+            window.draw_primitives(&seg[0..1], PrimitiveType::sfPoints, rs);
             continue;
         }
         for i in 0..shape.len() - 1 {
-            window.draw_primitives(&shape[i..i + 2], PrimitiveType::Lines);
+            seg = [Vertex::new_with_pos(&shape[i]), Vertex::new_with_pos(&shape[i + 1])];
+            window.draw_primitives(&seg[..], PrimitiveType::sfLines, rs);
         }
         if shape.len() > 2 {
-            let last: [Vertex; 2] = [shape[shape.len() - 1], shape[0]];
-            window.draw_primitives(&last[..], PrimitiveType::Lines);
+            seg = [Vertex::new_with_pos(&shape[shape.len() - 1]), Vertex::new_with_pos(&shape[0])];
+            window.draw_primitives(&seg[..], PrimitiveType::sfLines, rs);
         }
     }
 }
 
-pub fn calc_center(shape: &Shape) -> Vertex {
+pub fn calc_center(shape: &Shape) -> Vector2f {
     let mut c = Vector2f::new(0f32, 0f32);
     for v in shape.iter() {
-        c.x = c.x + v.position.x;
-        c.y = c.y + v.position.y;
+        c.x = c.x + v.x;
+        c.y = c.y + v.y;
     }
     c.x = c.x / shape.len() as f32;
     c.y = c.y / shape.len() as f32;
-    Vertex::new_with_pos(&c)
+    c
 }
