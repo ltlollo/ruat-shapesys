@@ -10,23 +10,11 @@ pub fn mid(f: &Vector2f, s: &Vector2f) -> Vector2f {
         y: (f.y + s.y) / 2f32,
     }
 }
-
 pub fn div_vec(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
-    let min_x = f.x.min(s.x);
-    let max_x = f.x.max(s.x);
-    let min_y = f.y.min(s.y);
-    let max_y = f.y.max(s.y);
-    let x = if f.x == min_x {
-        (max_x - min_x) * of / n + min_x
-    } else {
-        (max_x - min_x) * (n - of) / n + min_x
-    };
-    let y = if f.y == min_y {
-        (max_y - min_y) * of / n + min_y
-    } else {
-        (max_y - min_y) * (n - of) / n + min_y
-    };
-    Vector2f { x: x, y: y }
+    Vector2f {
+        x: (s.x - f.x) * (of / n) + f.x,
+        y: (s.y - f.y) * (of / n) + f.y,
+    }
 }
 
 pub fn draw_shapes(window: &mut RenderWindow,

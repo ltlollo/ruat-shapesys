@@ -44,7 +44,7 @@ fn main() {
                                                 x: WIDTH as f32 - OFF,
                                                 y: 0f32 + OFF,
                                             }]];
-    let shapes = g.iterate(&first_shape, 7);
+    let shapes = g.iterate(&first_shape, 10);
     let mut rs = RenderStates::default();
     draw_shapes(&mut window, &shapes, &mut rs);
     while window.is_open() {
