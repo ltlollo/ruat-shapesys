@@ -13,7 +13,7 @@ mod lang;
 use lang::*;
 use lang::geom::*;
 
-fn main() {
+fn process(g: &mut Grammar, niter: u8) {
     let mut window = RenderWindow::new(VideoMode::new_init(WIDTH, HEIGHT, 32),
                                        "shapesys",
                                        window_style::CLOSE,
@@ -22,11 +22,6 @@ fn main() {
 
     window.clear(&Color::black());
     window.display();
-
-    let mut g = Grammar::from_bytes(b"ABCD>AB.,BC.,CD.,DA.;\
-AaBnnnnncnCndnnnnn>acd,Aad,aBc,dcC")
-                    .unwrap();
-
     let first_shape: Vec<Shape> = vec![vec![Vector2f {
                                                 x: 0f32 + OFF,
                                                 y: 0f32 + OFF,
@@ -44,7 +39,7 @@ AaBnnnnncnCndnnnnn>acd,Aad,aBc,dcC")
                                                 y: 0f32 + OFF,
                                             }]];
     let mut rs = RenderStates::default();
-    let shapes = g.iterate(&mut window, &mut rs, &first_shape, 8);
+    let shapes = g.iterate(&mut window, &mut rs, &first_shape, niter);
 
     draw_shapes(&mut window, &shapes, &mut rs);
     while window.is_open() {
@@ -72,5 +67,23 @@ AaBnnnnncnCndnnnnn>acd,Aad,aBc,dcC")
             }
         }
         window.display();
+    }
+}
+fn main() {
+    let rules = std::env::args().nth(1);
+    let niter: Option<u8> = if let Some(n) = std::env::args().nth(2) {
+        n.parse().ok()
+    } else {
+        Some(8)
+    };
+    match (rules, niter) {
+        (Some(rules), Some(niter)) => {
+            match Grammar::from_bytes(rules.as_bytes()) {
+                Ok(mut g) => process(&mut g, niter),
+                Err(e) => println!("{:?}", e),
+            }
+        }
+        (_, _) => println!("Usage"),
+
     }
 }
