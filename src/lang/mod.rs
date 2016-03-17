@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
 extern crate vec_map;
+extern crate sfml;
 
 use self::vec_map::VecMap;
 use sfml::system::Vector2f;
+use sfml::graphics::{RenderWindow, RenderStates};
 
 pub mod geom;
 use self::geom::*;
@@ -53,6 +55,7 @@ pub struct Rule {
     no_adjacent_mids_opt: bool,
     no_center_opt: bool,
     n_gons: usize,
+    self_cycle: usize,
     lhs: Vec<u8>,
     vrhs: Vec<Vec<u8>>,
     vmap: VecMap<Vector2f>,
@@ -64,6 +67,7 @@ impl Rule {
             no_adjacent_mids_opt: self.no_adjacent_mids_opt,
             no_center_opt: self.no_center_opt,
             n_gons: self.n_gons,
+            self_cycle: self.vrhs.len(),
             lhs: self.lhs.clone(),
             vrhs: self.vrhs.clone(),
             vmap: self.vmap.clone(),
@@ -124,6 +128,12 @@ impl Rule {
                                     .filter(|seq| seq.len() > 0)
                                     .map(|seq| seq.iter().cloned().collect())
                                     .collect();
+        let self_cycle = rhsv.iter()
+                             .position(|ref v| {
+                                 v.len() == n_gons &&
+                                 v.iter().all(|&c| is_vertex(c))
+                             })
+                             .unwrap_or(rhsv.len());
         let mut nlhs: Vec<u8> = lhs.iter().cloned().collect();
         if !lhs.is_empty() {
             if !is_vertex(lhs[0]) {
@@ -137,6 +147,7 @@ impl Rule {
             no_adjacent_mids_opt: no_adjacent_mids_opt,
             no_center_opt: no_center_opt,
             n_gons: n_gons,
+            self_cycle: self_cycle,
             lhs: nlhs,
             vrhs: rhsv,
             vmap: VecMap::new(),
@@ -173,7 +184,11 @@ impl Rule {
             }
         }
     }
-    pub fn apply(&mut self, shape: &Shape) -> Vec<Shape> {
+    pub fn apply(&mut self,
+                 win: &mut RenderWindow,
+                 rs: &mut RenderStates,
+                 shape: &Shape)
+                 -> Vec<Shape> {
         let mut res = Vec::with_capacity(self.vrhs.len());
         let mut i = 0;
         for ele in shape.iter() {
@@ -187,8 +202,16 @@ impl Rule {
         if !self.no_center_opt {
             self.vmap.insert('.' as usize, calc_center(shape));
         }
-        for rhs in self.vrhs.iter() {
-            res.push(rhs.iter().map(|s| self.vmap[*s as usize]).collect())
+        for i in 0..self.vrhs.len() {
+            let shape = self.vrhs[i]
+                        .iter()
+                        .map(|s| self.vmap[*s as usize])
+                        .collect();
+            if i != self.self_cycle {
+                res.push(shape);
+            } else {
+                draw_shape(win, &shape, rs);
+            }
         }
         res
     }
@@ -228,20 +251,33 @@ impl Grammar {
         }
         Ok(Grammar { pmap: pmap })
     }
-    pub fn apply_rule(&mut self, shape: &Shape) -> Vec<Shape> {
+    pub fn apply_rule(&mut self,
+                      win: &mut RenderWindow,
+                      rs: &mut RenderStates,
+                      shape: &Shape)
+                      -> Vec<Shape> {
         match self.pmap.get_mut(shape.len()) {
-            Some(r) => r.apply(&shape),
+            Some(r) => r.apply(win, rs, &shape),
             None => vec![shape.clone()],
         }
     }
-    pub fn next(&mut self, state: &Vec<Shape>) -> Vec<Shape> {
+    pub fn next(&mut self,
+                win: &mut RenderWindow,
+                rs: &mut RenderStates,
+                state: &Vec<Shape>)
+                -> Vec<Shape> {
         state.iter().fold(Vec::new(), |mut res, shape| {
-            res.extend(self.apply_rule(shape));
+            res.extend(self.apply_rule(win, rs, shape));
             res
         })
     }
-    pub fn iterate(&mut self, state: &Vec<Shape>, depth: u8) -> Vec<Shape> {
-        (0..depth).fold(state.clone(), |state, _| self.next(&state))
+    pub fn iterate(&mut self,
+                   win: &mut RenderWindow,
+                   rs: &mut RenderStates,
+                   state: &Vec<Shape>,
+                   depth: u8)
+                   -> Vec<Shape> {
+        (0..depth).fold(state.clone(), |state, _| self.next(win, rs, &state))
     }
     pub fn as_string(&self) -> String {
         let res: Vec<String> = self.pmap
