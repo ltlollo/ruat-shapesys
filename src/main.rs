@@ -23,10 +23,9 @@ fn main() {
     window.clear(&Color::black());
     window.display();
 
-    let f = Rule::from_bytes(b"ABCD>AB.,BC.,CD.,DA.").unwrap();
-    let s = Rule::from_bytes(b"AaBnnnnncnCndnnnnn>acd,Aad,aBc,dcC").unwrap();
-
-    let mut g = Grammar::new(&[f, s]).unwrap();
+    let mut g = Grammar::from_bytes(b"ABCD>AB.,BC.,CD.,DA.;\
+AaBnnnnncnCndnnnnn>acd,Aad,aBc,dcC")
+                    .unwrap();
 
     let first_shape: Vec<Shape> = vec![vec![Vector2f {
                                                 x: 0f32 + OFF,

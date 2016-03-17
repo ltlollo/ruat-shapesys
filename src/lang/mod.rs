@@ -204,9 +204,9 @@ impl Rule {
         }
         for i in 0..self.vrhs.len() {
             let shape = self.vrhs[i]
-                        .iter()
-                        .map(|s| self.vmap[*s as usize])
-                        .collect();
+                            .iter()
+                            .map(|s| self.vmap[*s as usize])
+                            .collect();
             if i != self.self_cycle {
                 res.push(shape);
             } else {
@@ -229,6 +229,13 @@ impl Rule {
 pub enum GrammarErr {
     NonUniqueRule,
 }
+#[derive(Debug)]
+pub enum ParseErr {
+    RuleErr {
+        r: RuleErr,
+    },
+    GrammarErr,
+}
 
 pub struct Grammar {
     pmap: VecMap<Rule>,
@@ -250,6 +257,20 @@ impl Grammar {
             pmap.insert(rule.n_gons, rule.clone());
         }
         Ok(Grammar { pmap: pmap })
+    }
+    pub fn from_bytes(rules: &[u8]) -> Result<Grammar, ParseErr> {
+        let res: Result<Vec<_>, RuleErr> = rules.split(|&s| s == b';')
+                                                .map(|s| Rule::from_bytes(s))
+                                                .collect();
+        match res {
+            Ok(rules) => {
+                match Grammar::new(&rules[..]) {
+                    Ok(g) => Ok(g),
+                    Err(_) => Err(ParseErr::GrammarErr),
+                }
+            }
+            Err(err) => Err(ParseErr::RuleErr { r: err }),
+        }
     }
     pub fn apply_rule(&mut self,
                       win: &mut RenderWindow,
