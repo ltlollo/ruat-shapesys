@@ -70,20 +70,20 @@ fn process(g: &mut Grammar, niter: u8) {
     }
 }
 fn main() {
-    let rules = std::env::args().nth(1);
-    let niter: Option<u8> = if let Some(n) = std::env::args().nth(2) {
+    let args = (std::env::args().nth(1),
+                if let Some(n) = std::env::args().nth(2) {
         n.parse().ok()
     } else {
         Some(8)
-    };
-    match (rules, niter) {
+    });
+    match args {
         (Some(rules), Some(niter)) => {
             match Grammar::from_bytes(rules.as_bytes()) {
                 Ok(mut g) => process(&mut g, niter),
                 Err(e) => println!("{:?}", e),
             }
         }
-        (_, _) => println!("Usage"),
+        (_, _) => println!("Usage: Grammar [N]\n"),
 
     }
 }
