@@ -13,7 +13,36 @@ mod lang;
 use lang::*;
 use lang::geom::*;
 
-fn process(g: &mut Grammar, niter: u8) {
+fn poly(src: String) -> Option<Shape> {
+    src.split(";")
+       .map(|point| {
+           let (mut i, mut v) = (0, Vector2f { x: 0f32, y: 0f32 });
+           for coord in point.split(",") {
+               match i {
+                   0 => {
+                       if let Ok(x) = coord.parse() {
+                           v.x = x;
+                       } else {
+                           return None;
+                       }
+                   }
+                   1 => {
+                       if let Ok(y) = coord.parse() {
+                           v.y = y;
+                       } else {
+                           return None;
+                       }
+                   }
+                   _ => return None,
+               }
+               i = i + 1;
+           }
+           Some(v)
+       })
+       .collect()
+}
+
+fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
     let mut window = RenderWindow::new(VideoMode::new_init(WIDTH, HEIGHT, 32),
                                        "shapesys",
                                        window_style::CLOSE,
@@ -22,24 +51,8 @@ fn process(g: &mut Grammar, niter: u8) {
 
     window.clear(&Color::black());
     window.display();
-    let first_shape: Vec<Shape> = vec![vec![Vector2f {
-                                                x: 0f32 + OFF,
-                                                y: 0f32 + OFF,
-                                            },
-                                            Vector2f {
-                                                x: 0f32 + OFF,
-                                                y: HEIGHT as f32 - OFF,
-                                            },
-                                            Vector2f {
-                                                x: WIDTH as f32 - OFF,
-                                                y: HEIGHT as f32 - OFF,
-                                            },
-                                            Vector2f {
-                                                x: WIDTH as f32 - OFF,
-                                                y: 0f32 + OFF,
-                                            }]];
     let mut rs = RenderStates::default();
-    let shapes = g.iterate(&mut window, &mut rs, &first_shape, niter);
+    let shapes = g.iterate(&mut window, &mut rs, &state, n);
 
     draw_shapes(&mut window, &shapes, &mut rs);
     while window.is_open() {
@@ -69,21 +82,59 @@ fn process(g: &mut Grammar, niter: u8) {
         window.display();
     }
 }
+fn help() {
+    println!("Usage: Grammar [N] [POLY]");
+}
 fn main() {
+    let shape: Shape = vec![Vector2f {
+                                x: 0f32 + OFF,
+                                y: 0f32 + OFF,
+                            },
+                            Vector2f {
+                                x: 0f32 + OFF,
+                                y: HEIGHT as f32 - OFF,
+                            },
+                            Vector2f {
+                                x: WIDTH as f32 - OFF,
+                                y: HEIGHT as f32 - OFF,
+                            },
+                            Vector2f {
+                                x: WIDTH as f32 - OFF,
+                                y: 0f32 + OFF,
+                            }];
     let args = (std::env::args().nth(1),
                 if let Some(n) = std::env::args().nth(2) {
         n.parse().ok()
     } else {
         Some(8)
+    },
+                if let Some(s) = std::env::args().nth(3) {
+        poly(s)
+    } else {
+        Some(shape)
     });
     match args {
-        (Some(rules), Some(niter)) => {
+        (None, _, _) => {
+            println!("Error: missing grammar");
+            help();
+        }
+        (Some(rules), Some(n), Some(shape)) => {
             match Grammar::new(rules) {
-                Ok(mut g) => process(&mut g, niter),
-                Err(e) => println!("{:?}", e),
+                Ok(mut g) => process(&mut g, n, vec![shape]),
+                Err(e) => {
+                    println!("Error: parsing grammar\nWhat: {:?}", e);
+                    help();
+                }
             }
         }
-        (_, _) => println!("Usage: Grammar [N]\n"),
+        (_, None, _) => {
+            println!("Error: parsing N");
+            help();
+        }
+        (_, _, None) => {
+            println!("Error: parsing POLY");
+            help();
+        }
 
     }
 }
