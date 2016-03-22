@@ -6,3 +6,4 @@ authors = ["ltlollo <ltlollo.it@gmail.com>"]
 [dependencies]
 sfml = "*"
 vec_map = "*"
+itertools = "*"

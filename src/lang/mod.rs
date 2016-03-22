@@ -2,39 +2,39 @@
 
 extern crate vec_map;
 extern crate sfml;
+extern crate itertools;
 
 use self::vec_map::VecMap;
 use sfml::system::Vector2f;
 use sfml::graphics::{RenderWindow, RenderStates};
+use self::itertools::Itertools;
 
 pub mod geom;
 use self::geom::*;
 
-pub fn is_vertex(c: u8) -> bool {
+fn is_vertex(c: u8) -> bool {
     match c {
         b'A'...b'Z' => true,
         _ => false,
     }
 }
-
-pub fn is_mid(c: u8) -> bool {
+fn is_mid(c: u8) -> bool {
     match c {
         b'a'...b'z' => true,
         _ => false,
     }
 }
-
-pub fn is_center(c: u8) -> bool {
+fn is_center(c: u8) -> bool {
     c == b'.'
 }
-pub fn is_rhs_sepa(c: u8) -> bool {
+fn is_rhs_sepa(c: u8) -> bool {
     c == b','
 }
-pub fn is_rule_sepa(c: u8) -> bool {
+fn is_rule_sepa(c: u8) -> bool {
     c == b'>'
 }
 
-pub fn is_legal(c: u8) -> bool {
+fn is_legal(c: u8) -> bool {
     is_vertex(c) || is_mid(c) || is_center(c) || is_rhs_sepa(c) ||
     is_rule_sepa(c)
 }
@@ -57,10 +57,10 @@ pub struct ParseErr {
     src: String,
 }
 
-pub struct Rule {
+struct Rule {
     no_adjacent_mids_opt: bool,
     no_center_opt: bool,
-    n_gons: usize,
+    gons: usize,
     self_cycle: usize,
     lhs: Vec<u8>,
     vrhs: Vec<Vec<u8>>,
@@ -73,13 +73,16 @@ impl Rule {
         Rule {
             no_adjacent_mids_opt: self.no_adjacent_mids_opt,
             no_center_opt: self.no_center_opt,
-            n_gons: self.n_gons,
+            gons: self.gons,
             self_cycle: self.vrhs.len(),
             lhs: self.lhs.clone(),
             vrhs: self.vrhs.clone(),
             vmap: self.vmap.clone(),
             src: self.src.clone(),
         }
+    }
+    pub fn vertices(&self) -> usize {
+        self.gons
     }
     pub fn new<T: Into<String>>(rule: T) -> Result<Rule, ParseErr> {
         let src: String = rule.into();
@@ -180,7 +183,7 @@ impl Rule {
         Ok(Rule {
             no_adjacent_mids_opt: mid_opt,
             no_center_opt: center_opt,
-            n_gons: gons,
+            gons: gons,
             self_cycle: cycle,
             lhs: nlhs,
             vrhs: rhsv,
@@ -272,34 +275,29 @@ impl<'a> Into<String> for &'a Grammar {
     }
 }
 
-
 pub struct Grammar {
     pmap: VecMap<Rule>,
 }
 
 impl Grammar {
-    pub fn from_rules(rules: &[Rule]) -> Result<Grammar, ParseErr> {
-        if rules.len() > 1 {
-            for i in 0..rules.len() - 1 {
-                for j in i + 1..rules.len() {
-                    if rules[i].n_gons == rules[j].n_gons {
-                        return Err(ParseErr {
-                            err: RuleErr::NonUniqueRule,
-                            src: (&rules[j]).into(),
-                        });
-                    }
-                }
+    fn from_rules(rules: &[Rule]) -> Result<Grammar, ParseErr> {
+        for (i, j) in rules.iter().combinations() {
+            if i.vertices() == j.vertices() {
+                return Err(ParseErr {
+                    err: RuleErr::NonUniqueRule,
+                    src: j.into(),
+                });
             }
         }
         let mut pmap = VecMap::with_capacity(rules.len());
         for rule in rules.iter() {
-            pmap.insert(rule.n_gons, rule.clone());
+            pmap.insert(rule.vertices(), rule.clone());
         }
         Ok(Grammar { pmap: pmap })
     }
     pub fn new<T: Into<String>>(rules: T) -> Result<Grammar, ParseErr> {
-        let rules: String = rules.into();
-        let res: Result<Vec<_>, ParseErr> = rules.split(|s| s == ';')
+        let res: Result<Vec<_>, ParseErr> = rules.into()
+                                                 .split(|s| s == ';')
                                                  .map(|s| Rule::new(s))
                                                  .collect();
         match res {
@@ -307,11 +305,11 @@ impl Grammar {
             Err(err) => Err(err),
         }
     }
-    pub fn apply_rule(&mut self,
-                      win: &mut RenderWindow,
-                      rs: &mut RenderStates,
-                      shape: &Shape)
-                      -> Vec<Shape> {
+    pub fn apply(&mut self,
+                 win: &mut RenderWindow,
+                 rs: &mut RenderStates,
+                 shape: &Shape)
+                 -> Vec<Shape> {
         match self.pmap.get_mut(shape.len()) {
             Some(r) => r.apply(win, rs, &shape),
             None => vec![shape.clone()],
@@ -323,7 +321,7 @@ impl Grammar {
                 state: &Vec<Shape>)
                 -> Vec<Shape> {
         state.iter().fold(Vec::new(), |mut res, shape| {
-            res.extend(self.apply_rule(win, rs, shape));
+            res.extend(self.apply(win, rs, shape));
             res
         })
     }
