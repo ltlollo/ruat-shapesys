@@ -55,8 +55,8 @@ fn process(g: &mut Grammar, niter: u8) {
                         }
                         Key::S => {
                             if let Some(img) = window.capture() {
-                                let fname = g.as_string() + ".png";
-                                img.save_to_file(&fname);
+                                let gram : String = g.into();
+                                img.save_to_file(&(gram + ".png"));
                             }
                         }
                         _ => (),
@@ -78,7 +78,7 @@ fn main() {
     });
     match args {
         (Some(rules), Some(niter)) => {
-            match Grammar::from_bytes(rules.as_bytes()) {
+            match Grammar::new(rules) {
                 Ok(mut g) => process(&mut g, niter),
                 Err(e) => println!("{:?}", e),
             }

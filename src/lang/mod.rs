@@ -59,6 +59,7 @@ pub struct Rule {
     lhs: Vec<u8>,
     vrhs: Vec<Vec<u8>>,
     vmap: VecMap<Vector2f>,
+    src: String,
 }
 
 impl Rule {
@@ -71,90 +72,94 @@ impl Rule {
             lhs: self.lhs.clone(),
             vrhs: self.vrhs.clone(),
             vmap: self.vmap.clone(),
+            src: self.src.clone(),
         }
     }
-    pub fn from_bytes(rule: &[u8]) -> Result<Rule, RuleErr> {
-        for &sym in rule.iter() {
-            if !is_legal(sym) {
-                return Err(RuleErr::UnknownSymbol { s: sym });
-            }
-        }
-        let mut lhs: &[u8] = &[];
-        let mut rhs: &[u8] = &[];
-        let mut no_center_opt = true;
-        let mut no_adjacent_mids_opt = true;
-        let mut n_gons: usize = 0;
-
-        let mut i = 0;
-        for ele in rule.split(|c| is_rule_sepa(*c)) {
-            if i == 0 {
-                lhs = ele;
-                n_gons = ele.iter().filter(|c| is_vertex(**c)).count();
-            } else if i == 1 {
-                for &sym in ele.iter() {
-                    if !lhs.iter()
-                           .any(|&c| {
-                               c == sym || is_rhs_sepa(sym) || is_center(sym)
-                           }) {
-                        return Err(RuleErr::UnknownSymbol { s: sym });
-                    }
-                    if is_center(sym) {
-                        no_center_opt = false;
-                    }
-                }
-                rhs = ele;
-            }
-            i = i + 1;
-        }
-        if i < 2 {
-            return Err(RuleErr::NoSeparator);
-        } else if i > 2 {
-            return Err(RuleErr::MultiSeparatos);
-        }
-        if lhs.len() > 1 {
-            for j in 0..lhs.len() - 1 {
-                if is_mid(lhs[j]) && is_mid(lhs[j + 1]) {
-                    no_adjacent_mids_opt = false;
+    pub fn new<T: Into<String>>(rule: T) -> Result<Rule, RuleErr> {
+        let src: String = rule.into();
+        let (mid_opt, center_opt, gons, cycle, nlhs, rhsv) = {
+            let rule = src.as_bytes();
+            for &sym in rule.iter() {
+                if !is_legal(sym) {
+                    return Err(RuleErr::UnknownSymbol { s: sym });
                 }
             }
-        }
-        if n_gons < 2 && lhs.len() != n_gons {
-            return Err(RuleErr::PointSegmentation);
-        }
-        if n_gons == 0 && !no_center_opt {
-            return Err(RuleErr::EmptyCenter);
-        }
-        let rhsv: Vec<Vec<u8>> = rhs.split(|c| is_rhs_sepa(*c))
-                                    .filter(|seq| seq.len() > 0)
-                                    .map(|seq| seq.iter().cloned().collect())
-                                    .collect();
-        let self_cycle = rhsv.iter()
-                             .position(|ref v| {
-                                 v.len() == n_gons &&
-                                 v.iter().all(|&c| is_vertex(c))
-                             })
-                             .unwrap_or(rhsv.len());
-        let mut nlhs: Vec<u8> = lhs.iter().cloned().collect();
-        if !lhs.is_empty() {
-            if !is_vertex(lhs[0]) {
-                return Err(RuleErr::NonVertexStart);
-            } else {
-                nlhs.reserve_exact(1);
-                nlhs.push(lhs[0]);
+            let (mut lhs, mut rhs): (&[u8], &[u8]) = (&[], &[]);
+            let (mut center_opt, mut mid_opt) = (true, true);
+            let mut gons: usize = 0;
+            let mut i = 0;
+            for ele in rule.split(|c| is_rule_sepa(*c)) {
+                if i == 0 {
+                    lhs = ele;
+                    gons = ele.iter().filter(|c| is_vertex(**c)).count();
+                } else if i == 1 {
+                    for &sym in ele.iter() {
+                        if !lhs.iter()
+                               .any(|&c| {
+                                   c == sym || is_rhs_sepa(sym) ||
+                                   is_center(sym)
+                               }) {
+                            return Err(RuleErr::UnknownSymbol { s: sym });
+                        }
+                        if is_center(sym) {
+                            center_opt = false;
+                        }
+                    }
+                    rhs = ele;
+                }
+                i = i + 1;
             }
-        }
+            if i < 2 {
+                return Err(RuleErr::NoSeparator);
+            } else if i > 2 {
+                return Err(RuleErr::MultiSeparatos);
+            }
+            if lhs.len() > 1 {
+                for j in 0..lhs.len() - 1 {
+                    if is_mid(lhs[j]) && is_mid(lhs[j + 1]) {
+                        mid_opt = false;
+                    }
+                }
+            }
+            if gons < 2 && lhs.len() != gons {
+                return Err(RuleErr::PointSegmentation);
+            }
+            if gons == 0 && !center_opt {
+                return Err(RuleErr::EmptyCenter);
+            }
+            let rhsv: Vec<Vec<u8>> = rhs.split(|c| is_rhs_sepa(*c))
+                                        .filter(|seq| seq.len() > 0)
+                                        .map(|seq| {
+                                            seq.iter().cloned().collect()
+                                        })
+                                        .collect();
+            let cycle = rhsv.iter()
+                            .position(|ref v| {
+                                v.len() == gons &&
+                                v.iter().all(|&c| is_vertex(c))
+                            })
+                            .unwrap_or(rhsv.len());
+            let mut nlhs: Vec<u8> = lhs.iter().cloned().collect();
+            if !lhs.is_empty() {
+                if !is_vertex(lhs[0]) {
+                    return Err(RuleErr::NonVertexStart);
+                } else {
+                    nlhs.reserve_exact(1);
+                    nlhs.push(lhs[0]);
+                }
+            }
+            (mid_opt, center_opt, gons, cycle, nlhs, rhsv)
+        };
         Ok(Rule {
-            no_adjacent_mids_opt: no_adjacent_mids_opt,
-            no_center_opt: no_center_opt,
-            n_gons: n_gons,
-            self_cycle: self_cycle,
+            no_adjacent_mids_opt: mid_opt,
+            no_center_opt: center_opt,
+            n_gons: gons,
+            self_cycle: cycle,
             lhs: nlhs,
             vrhs: rhsv,
             vmap: VecMap::new(),
+            src: src,
         })
-    }
-    pub fn from_vec(v: &Vec<u8>) -> Result<Rule, RuleErr> {
-        Rule::from_bytes(&v[..])
     }
     pub fn calc_mids(&mut self) {
         if self.no_adjacent_mids_opt {
@@ -215,15 +220,32 @@ impl Rule {
         }
         res
     }
-    pub fn as_string(&self) -> String {
-        use std::string::String;
-        let mut res = self.lhs.clone();
-        let mut rhs = self.vrhs.join(&b',');
-        res.push(b'>');
-        res.append(&mut rhs);
-        String::from_utf8(res).unwrap()
+}
+impl<'a> Into<String> for &'a Rule {
+    fn into(self) -> String {
+        self.src.clone()
     }
 }
+impl<'a> Into<String> for &'a mut Grammar {
+    fn into(self) -> String {
+        let res: Vec<String> = self.pmap
+                                   .iter()
+                                   .map(|(_, s)| s.into())
+                                   .collect();
+        res.join(";")
+    }
+}
+impl<'a> Into<String> for &'a Grammar {
+    fn into(self) -> String {
+        let res: Vec<String> = self.pmap
+                                   .iter()
+                                   .map(|(_, s)| s.into())
+                                   .collect();
+        res.join(";")
+    }
+}
+
+
 
 #[derive(Debug)]
 pub enum GrammarErr {
@@ -242,7 +264,7 @@ pub struct Grammar {
 }
 
 impl Grammar {
-    pub fn new(rules: &[Rule]) -> Result<Grammar, GrammarErr> {
+    pub fn from_rules(rules: &[Rule]) -> Result<Grammar, GrammarErr> {
         if rules.len() > 1 {
             for i in 0..rules.len() - 1 {
                 for j in i + 1..rules.len() {
@@ -258,13 +280,14 @@ impl Grammar {
         }
         Ok(Grammar { pmap: pmap })
     }
-    pub fn from_bytes(rules: &[u8]) -> Result<Grammar, ParseErr> {
-        let res: Result<Vec<_>, RuleErr> = rules.split(|&s| s == b';')
-                                                .map(|s| Rule::from_bytes(s))
+    pub fn new<T: Into<String>>(rules: T) -> Result<Grammar, ParseErr> {
+        let rules: String = rules.into();
+        let res: Result<Vec<_>, RuleErr> = rules.split(|s| s == ';')
+                                                .map(|s| Rule::new(s))
                                                 .collect();
         match res {
             Ok(rules) => {
-                match Grammar::new(&rules[..]) {
+                match Grammar::from_rules(&rules[..]) {
                     Ok(g) => Ok(g),
                     Err(_) => Err(ParseErr::GrammarErr),
                 }
@@ -300,29 +323,4 @@ impl Grammar {
                    -> Vec<Shape> {
         (0..depth).fold(state.clone(), |state, _| self.next(win, rs, &state))
     }
-    pub fn as_string(&self) -> String {
-        let res: Vec<String> = self.pmap
-                                   .iter()
-                                   .map(|(_, s)| s.as_string())
-                                   .collect();
-        res.join(";")
-    }
 }
-
-// grammar explanation
-// def: RULE := LHS '>' RHS
-//      LHS  := [A-Z][:alpha:]
-//      RHS  := "" | [:alpha:] | "." | RHS ',' RHS
-// ex: AbCdEf>ACE,bdf
-//      - AbCdEf>_ instructs the parser to match an ACE shaped plygon,
-//        introducing b,d,f points between it's vertices
-//      - _>aBc instucts the parser to form a new aBc polygon with using the
-//        vertices introduced in LHS
-//      - Old vertices must be uppercase, new ones lowercase.
-//      - The LHS definition wraps arownd, therfore in "ABCd", d is considered
-//        between A and C (*)
-//      - '.' introduces the center of the polygon
-// def: RULES := RULE | RULE, RULES
-//      - rules LHS must match unique polygons
-//        ( ex: "ABC>", "AdBC>" is not allowed )
-//
