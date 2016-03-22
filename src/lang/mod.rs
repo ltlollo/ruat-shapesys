@@ -58,8 +58,8 @@ pub struct ParseErr {
 }
 
 struct Rule {
-    no_adjacent_mids_opt: bool,
-    no_center_opt: bool,
+    noadjmids_opt: bool,
+    nocenter_opt: bool,
     gons: usize,
     self_cycle: usize,
     lhs: Vec<u8>,
@@ -71,8 +71,8 @@ struct Rule {
 impl Rule {
     pub fn clone(&self) -> Rule {
         Rule {
-            no_adjacent_mids_opt: self.no_adjacent_mids_opt,
-            no_center_opt: self.no_center_opt,
+            noadjmids_opt: self.noadjmids_opt,
+            nocenter_opt: self.nocenter_opt,
             gons: self.gons,
             self_cycle: self.vrhs.len(),
             lhs: self.lhs.clone(),
@@ -122,7 +122,7 @@ impl Rule {
                     }
                     rhs = ele;
                 }
-                i = i + 1;
+                i += 1;
             }
             if i < 2 {
                 return Err(ParseErr {
@@ -181,8 +181,8 @@ impl Rule {
             (mid_opt, center_opt, gons, cycle, nlhs, rhsv)
         };
         Ok(Rule {
-            no_adjacent_mids_opt: mid_opt,
-            no_center_opt: center_opt,
+            noadjmids_opt: mid_opt,
+            nocenter_opt: center_opt,
             gons: gons,
             self_cycle: cycle,
             lhs: nlhs,
@@ -192,7 +192,7 @@ impl Rule {
         })
     }
     pub fn calc_mids(&mut self) {
-        if self.no_adjacent_mids_opt {
+        if self.noadjmids_opt {
             for i in 0..self.lhs.len() {
                 if is_mid(self.lhs[i]) {
                     let val = mid(&self.vmap[self.lhs[i - 1] as usize],
@@ -205,7 +205,7 @@ impl Rule {
             while i < self.lhs.len() {
                 let i_mb = i;
                 while is_mid(self.lhs[i]) {
-                    i = i + 1;
+                    i += 1;
                 }
                 let n_mids = i - i_mb;
                 for j in 0..n_mids {
@@ -215,7 +215,7 @@ impl Rule {
                                       (n_mids + 1) as f32);
                     self.vmap.insert(self.lhs[i_mb + j] as usize, val);
                 }
-                i = i + 1;
+                i += 1;
             }
         }
     }
@@ -234,7 +234,7 @@ impl Rule {
             i = i + 1;
         }
         self.calc_mids();
-        if !self.no_center_opt {
+        if !self.nocenter_opt {
             self.vmap.insert('.' as usize, calc_center(shape));
         }
         for i in 0..self.vrhs.len() {
@@ -274,11 +274,9 @@ impl<'a> Into<String> for &'a Grammar {
         res.join(";")
     }
 }
-
 pub struct Grammar {
     pmap: VecMap<Rule>,
 }
-
 impl Grammar {
     fn from_rules(rules: &[Rule]) -> Result<Grammar, ParseErr> {
         for (i, j) in rules.iter().combinations() {
@@ -289,11 +287,9 @@ impl Grammar {
                 });
             }
         }
-        let mut pmap = VecMap::with_capacity(rules.len());
-        for rule in rules.iter() {
-            pmap.insert(rule.vertices(), rule.clone());
-        }
-        Ok(Grammar { pmap: pmap })
+        Ok(Grammar {
+            pmap: rules.iter().map(|r| (r.vertices(), r.clone())).collect()
+        })
     }
     pub fn new<T: Into<String>>(rules: T) -> Result<Grammar, ParseErr> {
         let res: Result<Vec<_>, ParseErr> = rules.into()
