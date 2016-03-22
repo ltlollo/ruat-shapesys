@@ -42,13 +42,19 @@ pub fn is_legal(c: u8) -> bool {
 #[derive(Debug)]
 pub enum RuleErr {
     UnknownSymbol {
-        s: u8,
+        sym: u8,
     },
     PointSegmentation,
     EmptyCenter,
     NonVertexStart,
     NoSeparator,
     MultiSeparatos,
+    NonUniqueRule,
+}
+#[derive(Debug)]
+pub struct ParseErr {
+    err: RuleErr,
+    src: String,
 }
 
 pub struct Rule {
@@ -75,13 +81,16 @@ impl Rule {
             src: self.src.clone(),
         }
     }
-    pub fn new<T: Into<String>>(rule: T) -> Result<Rule, RuleErr> {
+    pub fn new<T: Into<String>>(rule: T) -> Result<Rule, ParseErr> {
         let src: String = rule.into();
         let (mid_opt, center_opt, gons, cycle, nlhs, rhsv) = {
             let rule = src.as_bytes();
             for &sym in rule.iter() {
                 if !is_legal(sym) {
-                    return Err(RuleErr::UnknownSymbol { s: sym });
+                    return Err(ParseErr {
+                        err: RuleErr::UnknownSymbol { sym: sym },
+                        src: src.clone(),
+                    });
                 }
             }
             let (mut lhs, mut rhs): (&[u8], &[u8]) = (&[], &[]);
@@ -99,7 +108,10 @@ impl Rule {
                                    c == sym || is_rhs_sepa(sym) ||
                                    is_center(sym)
                                }) {
-                            return Err(RuleErr::UnknownSymbol { s: sym });
+                            return Err(ParseErr {
+                                err: RuleErr::UnknownSymbol { sym: sym },
+                                src: src.clone(),
+                            });
                         }
                         if is_center(sym) {
                             center_opt = false;
@@ -110,9 +122,15 @@ impl Rule {
                 i = i + 1;
             }
             if i < 2 {
-                return Err(RuleErr::NoSeparator);
+                return Err(ParseErr {
+                    err: RuleErr::NoSeparator,
+                    src: src.clone(),
+                });
             } else if i > 2 {
-                return Err(RuleErr::MultiSeparatos);
+                return Err(ParseErr {
+                    err: RuleErr::MultiSeparatos,
+                    src: src.clone(),
+                });
             }
             if lhs.len() > 1 {
                 for j in 0..lhs.len() - 1 {
@@ -122,10 +140,16 @@ impl Rule {
                 }
             }
             if gons < 2 && lhs.len() != gons {
-                return Err(RuleErr::PointSegmentation);
+                return Err(ParseErr {
+                    err: RuleErr::PointSegmentation,
+                    src: src.clone(),
+                });
             }
             if gons == 0 && !center_opt {
-                return Err(RuleErr::EmptyCenter);
+                return Err(ParseErr {
+                    err: RuleErr::EmptyCenter,
+                    src: src.clone(),
+                });
             }
             let rhsv: Vec<Vec<u8>> = rhs.split(|c| is_rhs_sepa(*c))
                                         .filter(|seq| seq.len() > 0)
@@ -142,7 +166,10 @@ impl Rule {
             let mut nlhs: Vec<u8> = lhs.iter().cloned().collect();
             if !lhs.is_empty() {
                 if !is_vertex(lhs[0]) {
-                    return Err(RuleErr::NonVertexStart);
+                    return Err(ParseErr {
+                        err: RuleErr::NonVertexStart,
+                        src: src.clone(),
+                    });
                 } else {
                     nlhs.reserve_exact(1);
                     nlhs.push(lhs[0]);
@@ -246,30 +273,20 @@ impl<'a> Into<String> for &'a Grammar {
 }
 
 
-
-#[derive(Debug)]
-pub enum GrammarErr {
-    NonUniqueRule,
-}
-#[derive(Debug)]
-pub enum ParseErr {
-    RuleErr {
-        r: RuleErr,
-    },
-    GrammarErr,
-}
-
 pub struct Grammar {
     pmap: VecMap<Rule>,
 }
 
 impl Grammar {
-    pub fn from_rules(rules: &[Rule]) -> Result<Grammar, GrammarErr> {
+    pub fn from_rules(rules: &[Rule]) -> Result<Grammar, ParseErr> {
         if rules.len() > 1 {
             for i in 0..rules.len() - 1 {
                 for j in i + 1..rules.len() {
                     if rules[i].n_gons == rules[j].n_gons {
-                        return Err(GrammarErr::NonUniqueRule);
+                        return Err(ParseErr {
+                            err: RuleErr::NonUniqueRule,
+                            src: (&rules[j]).into(),
+                        });
                     }
                 }
             }
@@ -282,17 +299,12 @@ impl Grammar {
     }
     pub fn new<T: Into<String>>(rules: T) -> Result<Grammar, ParseErr> {
         let rules: String = rules.into();
-        let res: Result<Vec<_>, RuleErr> = rules.split(|s| s == ';')
-                                                .map(|s| Rule::new(s))
-                                                .collect();
+        let res: Result<Vec<_>, ParseErr> = rules.split(|s| s == ';')
+                                                 .map(|s| Rule::new(s))
+                                                 .collect();
         match res {
-            Ok(rules) => {
-                match Grammar::from_rules(&rules[..]) {
-                    Ok(g) => Ok(g),
-                    Err(_) => Err(ParseErr::GrammarErr),
-                }
-            }
-            Err(err) => Err(ParseErr::RuleErr { r: err }),
+            Ok(rules) => Grammar::from_rules(&rules[..]),
+            Err(err) => Err(err),
         }
     }
     pub fn apply_rule(&mut self,

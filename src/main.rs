@@ -55,7 +55,7 @@ fn process(g: &mut Grammar, niter: u8) {
                         }
                         Key::S => {
                             if let Some(img) = window.capture() {
-                                let gram : String = g.into();
+                                let gram: String = g.into();
                                 img.save_to_file(&(gram + ".png"));
                             }
                         }
