@@ -9,6 +9,7 @@ use sfml::system::Vector2f;
 use sfml::graphics::{RenderWindow, RenderStates};
 use self::itertools::Itertools;
 
+
 pub mod geom;
 use self::geom::*;
 
@@ -235,17 +236,17 @@ impl Rule {
         }
         self.calc_mids();
         if !self.nocenter_opt {
-            self.vmap.insert('.' as usize, calc_center(shape));
+            self.vmap.insert('.' as usize, shape.center());
         }
         for i in 0..self.vrhs.len() {
-            let shape = self.vrhs[i]
-                            .iter()
-                            .map(|s| self.vmap[*s as usize])
-                            .collect();
+            let shape: Shape = self.vrhs[i]
+                                   .iter()
+                                   .map(|s| self.vmap[*s as usize])
+                                   .collect();
             if i != self.self_cycle {
                 res.push(shape);
             } else {
-                draw_shape(win, &shape, rs);
+                shape.draw(win, rs);
             }
         }
         res
@@ -288,7 +289,7 @@ impl Grammar {
             }
         }
         Ok(Grammar {
-            pmap: rules.iter().map(|r| (r.vertices(), r.clone())).collect()
+            pmap: rules.iter().map(|r| (r.vertices(), r.clone())).collect(),
         })
     }
     pub fn new<T: Into<String>>(rules: T) -> Result<Grammar, ParseErr> {
@@ -306,7 +307,7 @@ impl Grammar {
                  rs: &mut RenderStates,
                  shape: &Shape)
                  -> Vec<Shape> {
-        match self.pmap.get_mut(shape.len()) {
+        match self.pmap.get_mut(shape.gons()) {
             Some(r) => r.apply(win, rs, &shape),
             None => vec![shape.clone()],
         }

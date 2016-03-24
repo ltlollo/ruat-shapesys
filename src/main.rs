@@ -54,7 +54,7 @@ fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
     let mut rs = RenderStates::default();
     let shapes = g.iterate(&mut window, &mut rs, &state, n);
 
-    draw_shapes(&mut window, &shapes, &mut rs);
+    shapes.draw(&mut window, &mut rs);
     while window.is_open() {
         for event in window.events() {
             match event {
@@ -86,22 +86,23 @@ fn help() {
     println!("Usage: Grammar [N] [POLY]");
 }
 fn main() {
-    let shape: Shape = vec![Vector2f {
-                                x: 0f32 + OFF,
-                                y: 0f32 + OFF,
-                            },
-                            Vector2f {
-                                x: 0f32 + OFF,
-                                y: HEIGHT as f32 - OFF,
-                            },
-                            Vector2f {
-                                x: WIDTH as f32 - OFF,
-                                y: HEIGHT as f32 - OFF,
-                            },
-                            Vector2f {
-                                x: WIDTH as f32 - OFF,
-                                y: 0f32 + OFF,
-                            }];
+    let shape = vec![Vector2f {
+                         x: 0f32 + OFF,
+                         y: 0f32 + OFF,
+                     },
+                     Vector2f {
+                         x: 0f32 + OFF,
+                         y: HEIGHT as f32 - OFF,
+                     },
+                     Vector2f {
+                         x: WIDTH as f32 - OFF,
+                         y: HEIGHT as f32 - OFF,
+                     },
+                     Vector2f {
+                         x: WIDTH as f32 - OFF,
+                         y: 0f32 + OFF,
+                     }]
+                    .into();
     let args = (std::env::args().nth(1),
                 if let Some(n) = std::env::args().nth(2) {
         n.parse().ok()
