@@ -11,7 +11,7 @@ pub fn mid(f: &Vector2f, s: &Vector2f) -> Vector2f {
         y: (f.y + s.y) / 2f32,
     }
 }
-pub fn div_vec(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
+pub fn div(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
     Vector2f {
         x: (s.x - f.x) * (of / n) + f.x,
         y: (s.y - f.y) * (of / n) + f.y,

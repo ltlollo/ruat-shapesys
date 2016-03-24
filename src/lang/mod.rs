@@ -192,7 +192,7 @@ impl Rule {
             src: src,
         })
     }
-    pub fn calc_mids(&mut self) {
+    fn calc_mids(&mut self) {
         if self.noadjmids_opt {
             for i in 0..self.lhs.len() {
                 if is_mid(self.lhs[i]) {
@@ -210,7 +210,7 @@ impl Rule {
                 }
                 let n_mids = i - i_mb;
                 for j in 0..n_mids {
-                    let val = div_vec(&self.vmap[self.lhs[i_mb - 1] as usize],
+                    let val = div(&self.vmap[self.lhs[i_mb - 1] as usize],
                                       &self.vmap[self.lhs[i] as usize],
                                       (j + 1) as f32,
                                       (n_mids + 1) as f32);
