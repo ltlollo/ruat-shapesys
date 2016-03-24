@@ -7,7 +7,6 @@ use sfml::system::Vector2f;
 use sfml::graphics::{RenderWindow, RenderStates};
 use self::itertools::Itertools;
 
-
 pub mod geom;
 use self::geom::*;
 
@@ -32,7 +31,6 @@ fn is_rhs_sepa(c: u8) -> bool {
 fn is_rule_sepa(c: u8) -> bool {
     c == b'>'
 }
-
 fn is_legal(c: u8) -> bool {
     is_vertex(c) || is_mid(c) || is_center(c) || is_rhs_sepa(c) ||
     is_rule_sepa(c)
@@ -55,7 +53,7 @@ pub struct ParseErr {
     err: RuleErr,
     src: String,
 }
-
+#[derive(Clone)]
 struct Rule {
     noadjmids_opt: bool,
     nocenter_opt: bool,
@@ -66,20 +64,7 @@ struct Rule {
     vmap: VecMap<Vector2f>,
     src: String,
 }
-
 impl Rule {
-    pub fn clone(&self) -> Rule {
-        Rule {
-            noadjmids_opt: self.noadjmids_opt,
-            nocenter_opt: self.nocenter_opt,
-            gons: self.gons,
-            self_cycle: self.vrhs.len(),
-            lhs: self.lhs.clone(),
-            vrhs: self.vrhs.clone(),
-            vmap: self.vmap.clone(),
-            src: self.src.clone(),
-        }
-    }
     pub fn vertices(&self) -> usize {
         self.gons
     }
@@ -209,9 +194,9 @@ impl Rule {
                 let n_mids = i - i_mb;
                 for j in 0..n_mids {
                     let val = div(&self.vmap[self.lhs[i_mb - 1] as usize],
-                                      &self.vmap[self.lhs[i] as usize],
-                                      (j + 1) as f32,
-                                      (n_mids + 1) as f32);
+                                  &self.vmap[self.lhs[i] as usize],
+                                  (j + 1) as f32,
+                                  (n_mids + 1) as f32);
                     self.vmap.insert(self.lhs[i_mb + j] as usize, val);
                 }
                 i += 1;
@@ -273,6 +258,7 @@ impl<'a> Into<String> for &'a Grammar {
         res.join(";")
     }
 }
+
 pub struct Grammar {
     pmap: VecMap<Rule>,
 }

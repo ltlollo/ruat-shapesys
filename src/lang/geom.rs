@@ -2,6 +2,8 @@ extern crate sfml;
 
 use sfml::system::Vector2f;
 use sfml::graphics::{RenderWindow, RenderTarget, RenderStates, Vertex};
+use sfml::graphics::PrimitiveType::sfLines as Lines;
+use sfml::graphics::PrimitiveType::sfPoints as Points;
 use std::slice::Iter;
 use std::iter::FromIterator;
 
@@ -21,25 +23,31 @@ pub fn div(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
 pub trait Draw {
     fn draw(&self, &mut RenderWindow, &mut RenderStates);
 }
+impl<T> Draw for Vec<T> where T: Draw
+{
+    fn draw(&self, window: &mut RenderWindow, rs: &mut RenderStates) {
+        for shape in self.iter() {
+            shape.draw(window, rs);
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct Shape {
     points: Vec<Vector2f>,
 }
-
 impl Shape {
     pub fn gons(&self) -> usize {
         self.points.len()
     }
     pub fn center(&self) -> Vector2f {
-        let mut c = Vector2f { x: 0f32, y: 0f32 };
-        for v in self.points.iter() {
-            c.x = c.x + v.x;
-            c.y = c.y + v.y;
-        }
-        c.x = c.x / self.points.len() as f32;
-        c.y = c.y / self.points.len() as f32;
-        c
+        self.points
+            .iter()
+            .fold(Vector2f { x: 0f32, y: 0f32 }, |acc, &v| acc + v) /
+        self.gons() as f32
+    }
+    pub fn iter(&self) -> Iter<Vector2f> {
+        self.points.iter()
     }
 }
 impl From<Vec<Vector2f>> for Shape {
@@ -54,41 +62,24 @@ impl FromIterator<Vector2f> for Shape {
         Shape { points: v }
     }
 }
-
-
 impl Draw for Shape {
     fn draw(&self, window: &mut RenderWindow, rs: &mut RenderStates) {
-        use sfml::graphics::PrimitiveType::sfLines as Lines;
-        use sfml::graphics::PrimitiveType::sfPoints as Points;
         let mut seg: [Vertex; 2];
-        if self.points.len() == 1 {
+        if self.gons() == 1 {
             seg = [Vertex::new_with_pos(&self.points[0]),
                    Vertex::new_with_pos(&self.points[0])];
             window.draw_primitives(&seg[0..1], Points, rs);
             return;
         }
-        for i in 0..self.points.len() - 1 {
+        for i in 0..self.gons() - 1 {
             seg = [Vertex::new_with_pos(&self.points[i]),
                    Vertex::new_with_pos(&self.points[i + 1])];
             window.draw_primitives(&seg[..], Lines, rs);
         }
-        if self.points.len() > 2 {
-            seg = [Vertex::new_with_pos(&self.points[self.points.len() - 1]),
+        if self.gons() > 2 {
+            seg = [Vertex::new_with_pos(&self.points[self.gons() - 1]),
                    Vertex::new_with_pos(&self.points[0])];
             window.draw_primitives(&seg[..], Lines, rs);
-        }
-    }
-}
-impl Shape {
-    pub fn iter(&self) -> Iter<Vector2f> {
-        self.points.iter()
-    }
-}
-impl<T> Draw for Vec<T> where T: Draw
-{
-    fn draw(&self, window: &mut RenderWindow, rs: &mut RenderStates) {
-        for shape in self.iter() {
-            shape.draw(window, rs);
         }
     }
 }
