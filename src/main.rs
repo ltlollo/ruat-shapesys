@@ -86,33 +86,22 @@ fn help() {
     println!("Usage: Grammar [N] [POLY]");
 }
 fn main() {
-    let shape = vec![Vector2f {
-                         x: 0f32 + OFF,
-                         y: 0f32 + OFF,
-                     },
-                     Vector2f {
-                         x: 0f32 + OFF,
-                         y: HEIGHT as f32 - OFF,
-                     },
-                     Vector2f {
-                         x: WIDTH as f32 - OFF,
-                         y: HEIGHT as f32 - OFF,
-                     },
-                     Vector2f {
-                         x: WIDTH as f32 - OFF,
-                         y: 0f32 + OFF,
-                     }]
-                    .into();
+    let (xf, xs, ys) = (0f32 + OFF, WIDTH as f32 - OFF, HEIGHT as f32 - OFF);
+    let shape = [xf, xf, xs, xs]
+                    .iter()
+                    .zip([xf, ys, ys, xf].iter())
+                    .map(|(&x, &y)| Vector2f { x: x, y: y })
+                    .collect();
     let args = (std::env::args().nth(1),
                 if let Some(n) = std::env::args().nth(2) {
-        n.parse().ok()
-    } else {
-        Some(8)
-    },
+                    n.parse().ok()
+                } else {
+                    Some(8)
+                },
                 if let Some(s) = std::env::args().nth(3) {
-        poly(s)
-    } else {
-        Some(shape)
+                    poly(s)
+                } else {
+                    Some(shape)
     });
     match args {
         (None, _, _) => {
