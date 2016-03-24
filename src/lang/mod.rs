@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 extern crate vec_map;
 extern crate sfml;
 extern crate itertools;
