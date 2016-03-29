@@ -22,3 +22,7 @@ def: RULES := RULE | RULE ";" RULES
 
 ###todo
 possibly generate/load a geometry shader
+
+###example
+
+![alt text](https://github.com/ltlollo/rust-shapesys/raw/master/AaBnndCc>acd,Aad,aBc,dcC;ABCD>AB.,BC.,CD.,DA..png "preview")
