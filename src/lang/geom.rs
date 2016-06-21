@@ -23,8 +23,7 @@ pub fn div(f: &Vector2f, s: &Vector2f, of: f32, n: f32) -> Vector2f {
 pub trait Draw {
     fn draw(&self, &mut RenderWindow, &mut RenderStates);
 }
-impl<T> Draw for Vec<T> where T: Draw
-{
+impl<T: Draw> Draw for Vec<T> {
     fn draw(&self, window: &mut RenderWindow, rs: &mut RenderStates) {
         for shape in self.iter() {
             shape.draw(window, rs);

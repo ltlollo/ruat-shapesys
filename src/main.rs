@@ -15,31 +15,31 @@ use lang::geom::*;
 
 fn poly(src: String) -> Option<Shape> {
     src.split(";")
-       .map(|point| {
-           let (mut i, mut v) = (0, Vector2f { x: 0f32, y: 0f32 });
-           for coord in point.split(",") {
-               match i {
-                   0 => {
-                       if let Ok(x) = coord.parse() {
-                           v.x = x;
-                       } else {
-                           return None;
-                       }
-                   }
-                   1 => {
-                       if let Ok(y) = coord.parse() {
-                           v.y = y;
-                       } else {
-                           return None;
-                       }
-                   }
-                   _ => return None,
-               }
-               i = i + 1;
-           }
-           Some(v)
-       })
-       .collect()
+        .map(|point| {
+            let (mut i, mut v) = (0, Vector2f { x: 0f32, y: 0f32 });
+            for coord in point.split(",") {
+                match i {
+                    0 => {
+                        if let Ok(x) = coord.parse() {
+                            v.x = x;
+                        } else {
+                            return None;
+                        }
+                    }
+                    1 => {
+                        if let Ok(y) = coord.parse() {
+                            v.y = y;
+                        } else {
+                            return None;
+                        }
+                    }
+                    _ => return None,
+                }
+                i = i + 1;
+            }
+            Some(v)
+        })
+        .collect()
 }
 
 fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
@@ -47,7 +47,7 @@ fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
                                        "shapesys",
                                        window_style::CLOSE,
                                        &ContextSettings::default())
-                         .expect("Cannot create a Render Window.");
+        .expect("Cannot create a Render Window.");
 
     window.clear(&Color::black());
     window.display();
@@ -58,7 +58,7 @@ fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
     while window.is_open() {
         for event in window.events() {
             match event {
-                event::KeyPressed{code, ..} => {
+                event::KeyPressed { code, .. } => {
                     match code {
                         Key::Escape => {
                             window.close();
@@ -88,20 +88,20 @@ fn help() {
 fn main() {
     let (xf, xs, ys) = (0f32 + OFF, WIDTH as f32 - OFF, HEIGHT as f32 - OFF);
     let shape = [xf, xf, xs, xs]
-                    .iter()
-                    .zip([xf, ys, ys, xf].iter())
-                    .map(|(&x, &y)| Vector2f { x: x, y: y })
-                    .collect();
+        .iter()
+        .zip([xf, ys, ys, xf].iter())
+        .map(|(&x, &y)| Vector2f { x: x, y: y })
+        .collect();
     let args = (std::env::args().nth(1),
                 if let Some(n) = std::env::args().nth(2) {
-                    n.parse().ok()
-                } else {
-                    Some(8)
-                },
+        n.parse().ok()
+    } else {
+        Some(8)
+    },
                 if let Some(s) = std::env::args().nth(3) {
-                    poly(s)
-                } else {
-                    Some(shape)
+        poly(s)
+    } else {
+        Some(shape)
     });
     match args {
         (None, _, _) => {

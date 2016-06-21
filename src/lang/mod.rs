@@ -91,10 +91,9 @@ impl Rule {
                 } else if i == 1 {
                     for &sym in ele.iter() {
                         if !lhs.iter()
-                               .any(|&c| {
-                                   c == sym || is_rhs_sepa(sym) ||
-                                   is_center(sym)
-                               }) {
+                            .any(|&c| {
+                                c == sym || is_rhs_sepa(sym) || is_center(sym)
+                            }) {
                             return Err(ParseErr {
                                 err: RuleErr::UnknownSymbol { sym: sym },
                                 src: src.clone(),
@@ -139,17 +138,14 @@ impl Rule {
                 });
             }
             let rhsv: Vec<Vec<u8>> = rhs.split(|c| is_rhs_sepa(*c))
-                                        .filter(|seq| seq.len() > 0)
-                                        .map(|seq| {
-                                            seq.iter().cloned().collect()
-                                        })
-                                        .collect();
+                .filter(|seq| seq.len() > 0)
+                .map(|seq| seq.iter().cloned().collect())
+                .collect();
             let cycle = rhsv.iter()
-                            .position(|ref v| {
-                                v.len() == gons &&
-                                v.iter().all(|&c| is_vertex(c))
-                            })
-                            .unwrap_or(rhsv.len());
+                .position(|ref v| {
+                    v.len() == gons && v.iter().all(|&c| is_vertex(c))
+                })
+                .unwrap_or(rhsv.len());
             let mut nlhs: Vec<u8> = lhs.iter().cloned().collect();
             if !lhs.is_empty() {
                 if !is_vertex(lhs[0]) {
@@ -223,9 +219,9 @@ impl Rule {
         }
         for i in 0..self.vrhs.len() {
             let shape: Shape = self.vrhs[i]
-                                   .iter()
-                                   .map(|s| self.vmap[*s as usize])
-                                   .collect();
+                .iter()
+                .map(|s| self.vmap[*s as usize])
+                .collect();
             if i != self.self_cycle {
                 res.push(shape);
             } else {
@@ -243,18 +239,18 @@ impl<'a> Into<String> for &'a Rule {
 impl<'a> Into<String> for &'a mut Grammar {
     fn into(self) -> String {
         let res: Vec<String> = self.pmap
-                                   .iter()
-                                   .map(|(_, s)| s.into())
-                                   .collect();
+            .iter()
+            .map(|(_, s)| s.into())
+            .collect();
         res.join(";")
     }
 }
 impl<'a> Into<String> for &'a Grammar {
     fn into(self) -> String {
         let res: Vec<String> = self.pmap
-                                   .iter()
-                                   .map(|(_, s)| s.into())
-                                   .collect();
+            .iter()
+            .map(|(_, s)| s.into())
+            .collect();
         res.join(";")
     }
 }
@@ -278,9 +274,9 @@ impl Grammar {
     }
     pub fn new<T: Into<String>>(rules: T) -> Result<Grammar, ParseErr> {
         let res: Result<Vec<_>, ParseErr> = rules.into()
-                                                 .split(|s| s == ';')
-                                                 .map(|s| Rule::new(s))
-                                                 .collect();
+            .split(|s| s == ';')
+            .map(|s| Rule::new(s))
+            .collect();
         match res {
             Ok(rules) => Grammar::from_rules(&rules[..]),
             Err(err) => Err(err),
