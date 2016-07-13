@@ -55,6 +55,7 @@ fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
     let shapes = g.iterate(&mut window, &mut rs, &state, n);
 
     shapes.draw(&mut window, &mut rs);
+    window.display();
     while window.is_open() {
         for event in window.events() {
             match event {
@@ -79,7 +80,6 @@ fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
                 _ => (),
             }
         }
-        window.display();
     }
 }
 fn help() {
