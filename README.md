@@ -26,3 +26,9 @@ possibly generate/load a geometry shader
 ###example
 
 ![alt text](https://github.com/ltlollo/rust-shapesys/raw/master/AaBnndCc>acd,Aad,aBc,dcC;ABCD>AB.,BC.,CD.,DA..png "preview")
+
+to generate some pictures
+```
+shufw CabBcdAef | appline _ "echo _; ./target/release/shapesys \"_>dCe,bBc,fAa,bc.,de.,fa.;ABCDEF>AB.,BC.,CD.,DE.,EF.,FA.\" 6 \"231,800;693,800;924,400;693,0;231,0;0,400\""
+
+```
