@@ -29,6 +29,8 @@ possibly generate/load a geometry shader
 
 to generate some pictures
 ```
-shufw CabBcdAef | appline _ "echo _; ./target/release/shapesys \"_>dCe,bBc,fAa,bc.,de.,fa.;ABCDEF>AB.,BC.,CD.,DE.,EF.,FA.\" 6 \"231,800;693,800;924,400;693,0;231,0;0,400\""
-
+cmd="./target/release/shapesys \
+\"_>dCe,bBc,fAa,bc.,de.,fa.;ABCDEF>AB.,BC.,CD.,DE.,EF.,FA.\" 6 \
+\"231,800;693,800;924,400;693,0;231,0;0,400\""
+shufw CabBcdAef | appline _ "echo $cmd; $cmd" -c
 ```
