@@ -45,7 +45,7 @@ fn poly(src: String) -> Option<Shape> {
 fn process(g: &mut Grammar, n: u8, state: Vec<Shape>) {
     let mut window = RenderWindow::new(VideoMode::new_init(WIDTH, HEIGHT, 32),
                                        "shapesys",
-                                       window_style::CLOSE,
+                                       window_style::DEFAULT_STYLE,
                                        &ContextSettings::default())
         .expect("Cannot create a Render Window.");
 
